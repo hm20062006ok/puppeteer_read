@@ -23,16 +23,16 @@ function getInterval(type) {
 async function run(urls) {
     let arr = [
         'http://aikahao.xcar.com.cn/item/910313.html',
-        'http://aikahao.xcar.com.cn/item/910054.html',
-        'http://aikahao.xcar.com.cn/item/909846.html',
-        'http://aikahao.xcar.com.cn/item/910147.html',
-        'http://aikahao.xcar.com.cn/item/910945.html',
-        'http://cheshihao.cheshi.com/news/557752.html',
-        'http://cheshihao.cheshi.com/news/558130.html',
+        // 'http://aikahao.xcar.com.cn/item/910054.html',
+        // 'http://aikahao.xcar.com.cn/item/909846.html',
+        // 'http://aikahao.xcar.com.cn/item/910147.html',
+        // 'http://aikahao.xcar.com.cn/item/910945.html',
+        // 'http://cheshihao.cheshi.com/news/557752.html',
+        // 'http://cheshihao.cheshi.com/news/558130.html',
         'http://cheshihao.cheshi.com/news/557548.html',
-        'http://cheshihao.cheshi.com/news/557887.html',
-        'http://cheshihao.cheshi.com/news/558238.html',
-        'http://cheshihao.cheshi.com/news/557759.html'
+        // 'http://cheshihao.cheshi.com/news/557887.html',
+        // 'http://cheshihao.cheshi.com/news/558238.html',
+        // 'http://cheshihao.cheshi.com/news/557759.html'
     ]
     let arrUrls = []
     for (let i = 0; i < arr.length; i++) {
@@ -78,7 +78,7 @@ async function run(urls) {
     let promiseArr = []
     for (let i = 0; i < sites.length; i++) {
         // console.log("sites[i]",sites[i])
-        promiseArr.push(openNewPage(sites[i], i))
+        promiseArr.push(openNewPage(sites[i],  i))
         // console.log('promiseArr.push' + i)
     }
     Promise.all(promiseArr).then(() => {
@@ -102,20 +102,37 @@ async function run(urls) {
 
 function getData(browser, record, i) {
     return new Promise(async (resolve, reject) => {
-        console.log("getData:", record.url, i, record.id)
+        console.log("getData:", record.url, i, record.id, record.type)
+        // console.log('__dirname : ' + __dirname)
         const page = await browser.newPage();
-        await page.goto(record.url);
-        await page.waitFor(3000)
+        await page.goto(record.url,{ waitUntil: 'networkidle0', timeout: 30 * 1000 }).catch(() =>{
+            console.log('超时')
+        })
+        // getSelector(record.type)
+        // await page.waitFor('.browse_number')
         let title = await page.title();
-        const bodyHandle = await page.$('body');
-        const html = await page.evaluate((body) =>{
-            body.innerHTML
-        }, bodyHandle);
-        await bodyHandle.dispose();
+        await page.addScriptTag({path:'./jquery.js'})
+        let result = await page.evaluate(() =>{
+            Object.defineProperties(navigator,{
+                webdriver:{
+                    get: () => false
+                }
+            })
+            var miaoQuery = jQuery.noConflict();
+            let read =  miaoQuery('.browse_number').text().replace(/[^\d.]/g, "")
+            let author =  miaoQuery('.detail_txt_lf').find('a').text().trim()
+            console.log('read:', read)
+            console.log('author:', author)
+            return {
+                read,
+                author
+            }
+        }, '');
+        console.log('result', result)
 
         resolve({
-            read: 8832,
-            author: '汽车之家',
+            read:'2',
+            author:'1',
             platform: '爱咖号',
             title,
             brand: '别克',
@@ -130,6 +147,7 @@ function sleeep(ms) {
 }
 
 async function openNewPage(site, index) {
+    // console.log("site.type",site.type)
     return new Promise(async (resolve, reject) => {
         const browser = await puppeteer.launch({
             defaultViewport: {
@@ -144,7 +162,7 @@ async function openNewPage(site, index) {
             data.push(record)
             await sleeep(site.interval)
         }
-        console.log('第' + index + '个完成')
+        console.log('第' + index + '个网站:'+site.type +'完成')
         await browser.close();
         resolve(data)
     })
