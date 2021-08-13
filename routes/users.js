@@ -35,8 +35,8 @@ async function run(urls) {
         // 'http://cheshihao.cheshi.com/news/557752.html',
         // 'http://cheshihao.cheshi.com/news/558130.html',
         // 'http://cheshihao.cheshi.com/news/557548.html',
-        // 'http://cheshihao.cheshi.com/video/558485.html',
-        // 'http://cheshihao.cheshi.com/news/557887.html',
+        'http://cheshihao.cheshi.com/video/558485.html',
+        'http://cheshihao.cheshi.com/news/557887.html',
         // 'http://cheshihao.cheshi.com/news/558238.html',
         // 'http://cheshihao.cheshi.com/news/557759.html'
     ]
@@ -115,46 +115,56 @@ async function run(urls) {
 // }
 // // 写入json文件
 // fs.writeFile('./google-emoji.json', JSON.stringify(json), function () {})
-//const browser = await puppeteer.launch({ignoreDefaultArgs: ["--enable-automation"], headless: true}); //去除自动化测试的提醒
-//   const page = await browser.newPage();
-//   await page.evaluateOnNewDocument(() => { //在每个新页面打开前执行以下脚本
-//     const newProto = navigator.__proto__;
-//     delete newProto.webdriver;  //删除navigator.webdriver字段
-//     navigator.__proto__ = newProto;
-//     window.chrome = {};  //添加window.chrome字段，为增加真实性还需向内部填充一些值
-//     window.chrome.app = {"InstallState":"hehe", "RunningState":"haha", "getDetails":"xixi", "getIsInstalled":"ohno"};
-//     window.chrome.csi = function(){};
-//     window.chrome.loadTimes = function(){};
-//     window.chrome.runtime = function(){};
-//     Object.defineProperty(navigator, 'userAgent', {  //userAgent在无头模式下有headless字样，所以需覆写
-//         get: () => "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_3) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/81.0.4044.113 Safari/537.36",
-//     });
-//     Object.defineProperty(navigator, 'plugins', {  //伪装真实的插件信息
-//         get: () => [{"description": "Portable Document Format",
-//                     "filename": "internal-pdf-viewer",
-//                     "length": 1,
-//                     "name": "Chrome PDF Plugin"}]
-//     });
-//     Object.defineProperty(navigator, 'languages', { //添加语言
-//         get: () => ["zh-CN", "zh", "en"],
-//     });
-//     const originalQuery = window.navigator.permissions.query; //notification伪装
-//     window.navigator.permissions.query = (parameters) => (
-//     parameters.name === 'notifications' ?
-//       Promise.resolve({ state: Notification.permission }) :
-//       originalQuery(parameters)
-//   );
-//
-//   await page.goto("https://www.aabbccc.com");
-//   //...
-//   await browser.close();
+
 
 function getData(browser, record, i) {
     return new Promise(async (resolve, reject) => {
         console.log("getData:", record.url, i, record.id, record.type)
-        // console.log('__dirname : ' + __dirname)
-
         const page = await browser.newPage();
+        let webdirver = await page.evaluateOnNewDocument(() => {
+            const newProto = navigator.__proto__;
+            // delete newProto.webdriver;
+            navigator.__proto__ = newProto;
+            window.chrome = {};
+            window.chrome.app = {
+                "InstallState": "hehe",
+                "RunningState": "haha",
+                "getDetails": "xixi",
+                "getIsInstalled": "ohno"
+            };
+            window.chrome.csi = function () {
+            };
+            window.chrome.loadTimes = function () {
+            };
+            window.chrome.runtime = function () {
+            };
+            Object.defineProperty(navigator, 'userAgent', {  //userAgent在无头模式下有headless字样，所以需覆写
+                get: () => "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_3) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/81.0.4044.113 Safari/537.36",
+            });
+            Object.defineProperty(navigator, 'plugins', {  //伪装真实的插件信息
+                get: () => [{
+                    "description": "Portable Document Format",
+                    "filename": "internal-pdf-viewer",
+                    "length": 1,
+                    "name": "Chrome PDF Plugin"
+                }]
+            });
+            Object.defineProperty(navigator, 'languages', { //添加语言
+                get: () => ["zh-CN", "zh", "en"],
+            });
+            const originalQuery = window.navigator.permissions.query;
+            window.navigator.permissions.query = (parameters) => (
+                parameters.name === 'notifications' ?
+                    Promise.resolve({state: Notification.permission}) :
+                    originalQuery(parameters)
+            );
+            let count = 0
+            return "1"
+        })
+        webdirver.then((payload) => {
+            console.log("payload",payload)
+        })
+        console.log('webdirver', )
         await page.goto(record.url, {waitUntil: 'networkidle0', timeout: 30 * 1000}).catch(() => {
             console.log('超时')
         })
@@ -189,7 +199,7 @@ function getData(browser, record, i) {
                         //     data.isVideo = false
                         // }
                         data.author = jquery('.user__name').text().trim()
-                        if(!data.author){
+                        if (!data.author) {
                             data.author = jquery('.name').text().trim()
                         }
                         // data.read = jquery('.icon_browse').parent().text().replace(/[^\d.]/g, "")
@@ -200,11 +210,6 @@ function getData(browser, record, i) {
                 return data
             }
 
-            Object.defineProperties(navigator, {
-                webdriver: {
-                    get: () => false
-                }
-            })
             let miaoQuery = jQuery.noConflict();
             return findDataByType(miaoQuery, type)
         }, record.type);
@@ -231,12 +236,20 @@ function sleeep(ms) {
 async function openNewPage(site, index) {
     // console.log("site.type",site.type)
     return new Promise(async (resolve, reject) => {
+
+        let headless = false;
+        if(site.type === 'toutiao'){
+            headless = false;
+        }else{
+            headless = true;
+        }
         const browser = await puppeteer.launch({
             defaultViewport: {
                 width: 1920,
                 height: 1080,
             },
-            headless: true
+            ignoreDefaultArgs: ["--enable-automation"],
+            headless
         });
         let data = []
         for (let i = 0; i < site.urls.length; i++) {
