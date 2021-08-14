@@ -42,8 +42,37 @@ function getTimeOutByType(type) {
 
 async function run(urls) {
     let arr = [
-        'http://www.qctt.cn/video/306288',
-        'http://www.qctt.cn/news/1065513',
+        'http://www.youcheyihou.com/news/1208235',
+        'http://www.youcheyihou.com/news/1208407'
+        // 'http://www.12365auto.com/zjdy/20210813/152491.shtml'
+        // 'http://www.che-shijie.com/news/2108/21556_1.shtml'
+        // 'http://ishare.ifeng.com/c/s/v002LJbFVwfWtkOkhVl--uKT941f-_6EFrK476jIS3rcfZpiA__',
+        // 'http://v.ifeng.com/c/88eO5V7Aw03',
+        // 'http://v.ifeng.com/c/88fpdjRKXOF'
+        // 'http://video.baomihua.com/v/48695375'
+        // 'http://www.360kuai.com/9ae223b852906ad1d'
+        // 'http://v.qq.com/x/page/e3268oxiyqd.html',
+        // 'http://new.qq.com/omn/20210810/20210810A0DLQ400'
+        // 'http://auto.sina.com.cn/info/cx/2021-08-13/detail-ikqciyzm1187114.shtml',
+        // 'http://k.sina.cn/article_6569466249_18792198900101bm46.html'
+        // 'http://3g.k.sohu.com/t/n549568301',
+        // 'http://3g.k.sohu.com/t/n549602634'
+        // 'http://chejiahao.autohome.com.cn/info/9286866',
+        // 'http://chejiahao.autohome.com.cn/info/9288959'
+        // 'https://www.laosiji.com/thread_1511187/',
+        // 'https://www.laosiji.com/thread_1511227/'
+        // 'http://www.myzaker.com/article/610f02837f780beb4c000002'
+        // 'http://www.dripcar.com/zixun/172122.html'
+        // 'https://v.qq.com/x/page/e3268neaty4.html'
+        // 'http://www.youcheyihou.com/news/1208232',
+        // 'http://www.youcheyihou.com/news/1208326'
+        // 'http://www.yidianzixun.com/article/0WhsmCa4',
+        // 'http://www.sohu.com/a/483197234_121119176',
+        // 'http://www.sohu.com/a/483117242_121189651',
+        // 'http://www.auto-first.cn/news/story_104551.html',
+        // 'http://www.auto-first.cn/news/story_104608.html',
+        // 'http://www.qctt.cn/video/306288',
+        // 'http://www.qctt.cn/news/1065513',
         // 'http://www.toutiao.com/a1707511721790464/',
         // 'http://www.toutiao.com/a6994081780332495372',
         // 'http://hj.pcauto.com.cn/article/908470',
@@ -98,9 +127,8 @@ async function run(urls) {
             type = 'chexun'
             platform = '车讯网'
         } else if (arr[i].indexOf('v.ifeng.com') > -1) {
-            // TODO  没有例子
             type = 'ifeng'
-            platform = '凤凰网'
+            platform = '凤凰网视频'
         } else if (arr[i].indexOf('hj.pcauto.com.cn') > -1) {
             type = 'hj'
             platform = '行家'
@@ -113,6 +141,57 @@ async function run(urls) {
         } else if (arr[i].indexOf('qctt.cn/video') > -1) {
             type = 'qctt_video'
             platform = '汽车头条视频'
+        } else if (arr[i].indexOf('auto-first.cn/news') > -1) {
+            type = 'auto_first'
+            platform = '汽势'
+        } else if (arr[i].indexOf('www.sohu.com') > -1) {
+            type = 'sohu'
+            platform = '搜狐自媒体'
+        } else if (arr[i].indexOf('3g.k.sohu.com') > -1) {
+            type = '3g_sohu'
+            platform = '搜狐新闻客户端'
+        } else if (arr[i].indexOf('yidianzixun.com') > -1) {
+            type = 'yidianzixun'
+            platform = '一点资讯'
+        } else if (arr[i].indexOf('youcheyihou.com') > -1) {
+            type = 'youcheyihou'
+            platform = '有车以后'
+        } else if (arr[i].indexOf('v.qq.com') > -1) {
+            type = 'v_qq'
+            platform = '腾讯视频'
+        } else if (arr[i].indexOf('dripcar.com') > -1) {
+            type = 'dripcar'
+            platform = '水滴汽车'
+        } else if (arr[i].indexOf('myzaker.com') > -1) {
+            type = 'myzaker'
+            platform = 'Zaker新闻'
+        } else if (arr[i].indexOf('laosiji.com') > -1) {
+            type = 'laosiji'
+            platform = '老司机'
+        } else if (arr[i].indexOf('chejiahao.autohome.com.cn') > -1) {
+            type = 'chejiahao'
+            platform = '汽车之家车家号'
+        } else if (arr[i].indexOf('auto.sina.com.cn') > -1) {
+            type = 'auto_sina'
+            platform = '新浪汽车'
+        } else if (arr[i].indexOf('k.sina.cn') > -1) {
+            type = 'k_sina'
+            platform = '新浪新闻客户端'
+        } else if (arr[i].indexOf('new.qq.com') > -1) {
+            type = 'new_qq'
+            platform = '企鹅号'
+        } else if (arr[i].indexOf('video.baomihua.com') > -1) {
+            type = 'baomihua'
+            platform = '爆米花网视频'
+        } else if (arr[i].indexOf('ishare.ifeng.com') > -1) {
+            type = 'iShare_ifeng'
+            platform = '凤凰新闻客户端视频'
+        } else if (arr[i].indexOf('che-shijie.com') > -1) {
+            type = 'che_shijie'
+            platform = '车视界科技视频'
+        } else if (arr[i].indexOf('12365auto.com') > -1) {
+            type = 'auto12365'
+            platform = '车质网'
         }
         arrUrls.push({
             type,
@@ -256,6 +335,7 @@ function getData(browser, record, i) {
                         data.read = jquery('.basic-txt').text().replace(/[^\d.]/g, "");
                         data.author = jquery('.maker-name').text()
                         data.isVideo = true
+                        data.platform = "爱奇艺视频"
                         break;
                     case 'chexun':
                         data.read = jquery('#pageViewN').text()
@@ -276,7 +356,7 @@ function getData(browser, record, i) {
                     case 'qctt':
                         data.read = jquery('.v-view').parent().text()
                         data.author = jquery('.channel').text()
-                        if(!data.read){
+                        if (!data.read) {
                             data.read = jquery('.author-info').children('span').eq(1).text().replace('浏览', '');
                             data.author = jquery('.author-info').find('span').first().text()
                         }
@@ -286,6 +366,97 @@ function getData(browser, record, i) {
                         data.read = jquery('.author-info').children('span').eq(1).text().replace('播放', '');
                         data.author = jquery('.author-info').find('span').first().text()
                         data.platform = '汽车头条视频'
+                        break;
+                    case 'auto_first':
+                        data.read = jquery('.story-info-seen').text();
+                        data.author = jquery('#u_info').children('dd').eq('0').children('h3').eq(0).children('a').eq(0).text()
+                        break;
+                    case 'sohu':
+                        data.read = jquery('.l.read-num').text()
+                        data.author = jquery('.name.l').text()
+                        data.platform = '搜狐自媒体'
+                        data.isVideo = false
+                        let id = jquery('#sohuVideoBox').attr('id')
+                        if (id) {
+                            data.platform = '搜狐自媒体视频'
+                            data.isVideo = true
+                        }
+                        break;
+                    case 'yidianzixun':
+                        // data.read = jquery('.l.read-num').text()
+                        data.author = jquery('.yidian-info').children('span').eq('0').text()
+                        break;
+                    case 'youcheyihou':
+                        data.author = jquery('.news-detail__summary').children('span').eq('0').text()
+                        if (jquery('.news-video').length > 0) {
+                            data.isVideo = true
+                            data.platform = '有车以后视频'
+                        }
+                        break;
+                    case 'v_qq':
+                        data.read = jquery('#mod_cover_playnum').text()
+                        data.author = jquery('.user_aside').children('span').eq('0').text()
+                        data.isVideo = true
+                        break;
+                    case 'dripcar':
+                        data.read = jquery('.middle').children('span').eq('0').text()
+                        data.author = jquery('.time').text().split('|')[0].trim()
+                        break;
+                    case 'myzaker':
+                        data.author = jquery('.article-auther').text()
+                        break;
+                    case 'laosiji':
+                        data.author = jquery('.author-name').children('span').eq('0').text()
+                        if (jquery('.player').length > 0) {
+                            data.platform = '老司机视频'
+                            data.isVideo = true
+                        }
+                        break;
+                    case 'chejiahao':
+                        data.author = jquery('.articleTag').children('span').eq('0').text()
+                        data.read = jquery('.articleTag').children('span').eq('1').text()
+                        if (jquery('.video-container').length > 0) {
+                            data.platform = '汽车之家车家号视频'
+                            data.isVideo = true
+                        }
+                        break;
+                    case '3g_sohu':
+                        data.author = jquery('.name').children('span').eq('0').text()
+                        if (jquery('.multi-videos').length > 0) {
+                            data.platform = '搜狐新闻客户端视频'
+                            data.isVideo = true
+                        }
+                        break;
+                    case 'auto_sina':
+                        data.author = jquery('.source.ent-source').text()
+                        break;
+                    case 'k_sina':
+                        data.author = jquery('.weibo_user').text()
+                        break;
+                    case 'new_qq':
+                        data.author = jquery('.author').children('div').eq('0').text()
+                        break;
+                    case 'baomihua':
+                        data.author = jquery('.user_name').children('a').eq('0').text()
+                        data.isVideo = true
+                        data.remark = '可能有错误，需要检查'
+                        break;
+                    case 'ifeng':
+                        data.author = jquery("div[class^='userName']").children('a').eq('0').text()
+                        data.read = jquery("span[class^='playNum']").text()
+                        data.isVideo = true
+                        break;
+                    case 'iShare_ifeng':
+                        data.author = jquery("p[class^='sourceFrom']").text()
+                        data.isVideo = true
+                        break;
+                    case 'che_shijie':
+                        data.read = jquery(".news_date").children('span').eq('2').children('i').eq('0').text()
+                        data.author = jquery(".news_date").children('span').eq('3').children('em').eq('0').text().replace('编辑：', '')
+                        data.isVideo = true
+                        break;
+                    case 'auto12365':
+                        data.read = jquery(".dy_user").text()
                         break;
                     default:
                         break;
@@ -323,7 +494,8 @@ async function openNewPage(site, index) {
 
         let headless = true;
         //TODO 其他类型
-        if (site.type === 'toutiao' || site.type === 'qctt' || site.type === 'qctt_video') {
+        let headlessSites = ['toutiao', 'qctt', 'qctt_video']
+        if (headlessSites.includes(site.type)) {
             console.log('open with ui')
             headless = false;
         } else {
