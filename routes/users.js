@@ -298,16 +298,16 @@ function getData(browser, record, i) {
                 let data = {}
                 switch (type) {
                     case 'aikahao':
-                        data.read = jquery('.browse_number').text().replace(/[^\d.]/g, "")
+                        data.read = jquery('.browse_number').text().replace('浏览', "")
                         data.author = jquery('.detail_txt_lf').find('a').text().trim()
                         break;
                     case 'aikahao_video':
-                        data.read = jquery('.browse_number').text().replace(/[^\d.]/g, "")
+                        data.read = jquery('.browse_number').text().replace('浏览', "")
                         data.author = jquery('.detail_txt_lf').find('a').text().trim()
                         break;
                     case 'cheshihao':
                         data.read = jquery('.icon_browse').parent().text().replace(/[^\d.]/g, "")
-                        data.author = jquery('.name').text().trim()
+                        data.author = jquery('.author_txt').children('p').eq(0).children('a').eq(0).text().trim()
                         break;
                     case 'cheshihao_video':
                         data.read = jquery('.icon_browse').parent().text().replace(/[^\d.]/g, "")
@@ -325,7 +325,7 @@ function getData(browser, record, i) {
                         }
                         break;
                     case '360kuai':
-                        data.author = jquery('.cp-cp.source.verify.float--left.cp-cp--canclick').text()
+                        data.author = jquery('.float--left.cp-cp--canclick').text()
                         // data.author = jquery('.name').text().trim()
                         break;
                     case 'acfun':
@@ -377,7 +377,7 @@ function getData(browser, record, i) {
                         if(!data.read){
                             data.read = jquery('.read-num').text().replace('阅读 (', '').replace(')','')
                         }
-                        data.author = jquery('.name.l').text()
+                        data.author = jquery('.right-author-info').children('div').eq(0).children('a').eq(1).text()
 
                         if(!data.author){
                             data.author = jquery('#user-info').children('h4').eq(0).text().trim()
@@ -404,6 +404,9 @@ function getData(browser, record, i) {
                     case 'v_qq':
                         data.read = jquery('#mod_cover_playnum').text()
                         data.author = jquery('.user_aside').children('span').eq('0').text()
+                        if(!data.author){
+                            data.author = ''
+                        }
                         data.isVideo = true
                         break;
                     case 'dripcar':
@@ -497,7 +500,7 @@ function sleeep(ms) {
 }
 
 async function openNewPage(site, index, md5) {
-    // console.log("site.type",site.type)
+    console.log("site.type",site.type)
     return new Promise(async (resolve, reject) => {
 
         let headless = true;
@@ -516,74 +519,112 @@ async function openNewPage(site, index, md5) {
             ignoreDefaultArgs: ["--enable-automation"],
             headless
         });
-        let data = []
+        // let data = []
+
         for (let i = 0; i < site.urls.length; i++) {
             let record = await getData(browser, site.urls[i], i)
+
+            if (!fs.existsSync('./data/' + md5 + '_data.json')) {
+                console.log('新建')
+                fs.writeFileSync('./data/' + md5 + '_data.json', JSON.stringify(record))
+            } else {
+                console.log('添加')
+                fs.appendFileSync('./data/' + md5 + '_data.json', ','+JSON.stringify(record))
+            }
             console.log(record)
-            data.push(record)
+            let fileString = fs.readFileSync('./md5.json', 'utf8');
+            let regExp = new RegExp('(?<='+md5+'","completed":).+(?=,)');
+            let count = Number.parseInt(fileString.match(regExp)[0]) + 1
+            let replacedString = fileString.replace(regExp, count+'')
+            console.log('count',replacedString)
+            fs.writeFileSync('./md5.json',replacedString)
+
+            // data.push(record)
             await sleeep(site.interval)
         }
         console.log('第' + index + '个网站:' + site.type + '完成' + md5)
-        if (!fs.existsSync('./data/' + md5 + '_data.json')) {
-            console.log('新建')
-            fs.writeFileSync('./data/' + md5 + '_data.json', JSON.stringify(data), function () {
-
-            })
-        } else {
-            console.log('添加')
-            fs.appendFileSync('./data/' + md5 + '_data.json', ','+JSON.stringify(data), function () {
-
-            })
-
-        }
 
         await browser.close();
-        resolve(data)
+        resolve(index)
     })
 
 }
-
 router.post('/', function (req, res, next) {
-    console.log('users')
+
+    process.setMaxListeners(0)
     let urls = JSON.parse(req.body.urls);
     console.log(urls)
     // console.log(data)
     const md5 = crypto.createHash('md5');
     let dataMD5 = md5.update(req.body.urls).digest('hex');
     console.log('dataMD5', dataMD5)
+    let requestData = {
+        id: dataMD5,
+        completed: 0,
+        length: urls.length,
+    }
     try {
-        const data = fs.readFileSync('./md5.json', 'utf8').split(/[(\r\n)\r\n]+/)
-        console.log(data)
-        let alreadyInSpam = data.some((item) => {
-            console.log('item', item)
-            return item == dataMD5
-        })
-        if (alreadyInSpam) {
-            res.json({msg: '已经在抓取中或已经完成', code: 200, success: false, id: dataMD5})
-        } else {
-            fs.appendFileSync('./md5.json', dataMD5 + '\n')
+
+        if (!fs.existsSync('./md5.json')) {
+            fs.writeFileSync('./md5.json', JSON.stringify(requestData))
             run(urls, dataMD5).then(() => {
 
             })
-            res.json({msg: '开始抓取', code: 200, success: true, id: dataMD5})
+            res.json({msg: '开始抓取, 至少需要等待45秒', code: 200, success: true, id: dataMD5})
+        }else{
+            const data = JSON.parse('['+fs.readFileSync('./md5.json', 'utf8')+']')
+            console.log(data)
+            let alreadyInSpam = data.some((item) => {
+                return item.id === dataMD5
+            })
+            if (alreadyInSpam) {
+                res.json({msg: '相同数据正在在抓取中', code: 200, success: false, id: dataMD5})
+            } else {
+                fs.appendFileSync('./md5.json', ','+JSON.stringify(requestData))
+                run(urls, dataMD5).then(() => {
+
+                })
+                res.json({msg: '开始抓取, 至少需要等待45秒', code: 200, success: true, id: dataMD5})
+            }
         }
-        // console.log('alreadyInSpam', alreadyInSpam)
     } catch (err) {
-        //TODO 当没有md5.json 文件时的错误处理
         console.error(err)
     }
 });
 
 
 router.get('/query', function (req, res, next) {
+    res.header('Content-Type', 'application/json');
     let md5 = req.query.id.trim()
     try {
-        if (fs.existsSync('./data/' + md5 + '_data.json')) {
-            const data = '['+fs.readFileSync('./data/' + md5 + '_data.json', 'utf8') + ']'
-            res.json({msg: '已完成', code: 200, success: true, id: md5, data: JSON.parse(data)})
-        } else {
-            res.json({msg: '未完成， 请稍后', code: 200, success: false, id: md5})
+
+        const data = JSON.parse('['+fs.readFileSync('./md5.json', 'utf8')+']')
+        let currentRequest = {}
+        let alreadyInSpam = data.some((item) => {
+            if(item.id === md5){
+                currentRequest = item
+            }
+            return item.id === md5
+        })
+        if(alreadyInSpam){
+            if (fs.existsSync('./data/' + md5 + '_data.json')) {
+                const data = '['+fs.readFileSync('./data/' + md5 + '_data.json', 'utf8') + ']'
+                if (currentRequest.completed === currentRequest.length) {
+                    res.json({msg: '已完成', code: 200, success: true, id: md5, completed: currentRequest.completed, total: currentRequest.length, data: JSON.parse(data)})
+                    return
+                }
+                res.json({msg: '已完成部分', code: 201, success: false, id: md5, completed: currentRequest.completed, total: currentRequest.length, data: JSON.parse(data)})
+                return
+            } else {
+                res.json({msg: '无数据， 请稍后', code: 400, success: false, id: md5})
+                return
+            }
+        }else{
+            res.json({msg: '无数据， 请稍后', code: 400, success: false, id: md5})
+            return
         }
+
+
     } catch (err) {
         console.error(err)
     }
