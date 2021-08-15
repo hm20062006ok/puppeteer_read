@@ -3,6 +3,7 @@ var router = express.Router();
 const puppeteer = require('puppeteer');
 const fs = require('fs')
 const crypto = require('crypto');
+
 function getInterval(type) {
     let interval
     switch (type) {
@@ -38,62 +39,62 @@ function getTimeOutByType(type) {
     return timeout
 }
 
-async function run(urls, id) {
+async function run(urls, md5) {
     console.log(urls)
     let arr = urls
-        // [
-        // 'http://www.youcheyihou.com/news/1208235',
-        // 'http://www.youcheyihou.com/news/1208407'
-        // 'http://www.12365auto.com/zjdy/20210813/152491.shtml'
-        // 'http://www.che-shijie.com/news/2108/21556_1.shtml'
-        // 'http://ishare.ifeng.com/c/s/v002LJbFVwfWtkOkhVl--uKT941f-_6EFrK476jIS3rcfZpiA__',
-        // 'http://v.ifeng.com/c/88eO5V7Aw03',
-        // 'http://v.ifeng.com/c/88fpdjRKXOF'
-        // 'http://video.baomihua.com/v/48695375'
-        // 'http://www.360kuai.com/9ae223b852906ad1d'
-        // 'http://v.qq.com/x/page/e3268oxiyqd.html',
-        // 'http://new.qq.com/omn/20210810/20210810A0DLQ400'
-        // 'http://auto.sina.com.cn/info/cx/2021-08-13/detail-ikqciyzm1187114.shtml',
-        // 'http://k.sina.cn/article_6569466249_18792198900101bm46.html'
-        // 'http://3g.k.sohu.com/t/n549568301',
-        // 'http://3g.k.sohu.com/t/n549602634'
-        // 'http://chejiahao.autohome.com.cn/info/9286866',
-        // 'http://chejiahao.autohome.com.cn/info/9288959'
-        // 'https://www.laosiji.com/thread_1511187/',
-        // 'https://www.laosiji.com/thread_1511227/'
-        // 'http://www.myzaker.com/article/610f02837f780beb4c000002'
-        // 'http://www.dripcar.com/zixun/172122.html'
-        // 'https://v.qq.com/x/page/e3268neaty4.html'
-        // 'http://www.youcheyihou.com/news/1208232',
-        // 'http://www.youcheyihou.com/news/1208326'
-        // 'http://www.yidianzixun.com/article/0WhsmCa4',
-        // 'http://www.sohu.com/a/483197234_121119176',
-        // 'http://www.sohu.com/a/483117242_121189651',
-        // 'http://www.auto-first.cn/news/story_104551.html',
-        // 'http://www.auto-first.cn/news/story_104608.html',
-        // 'http://www.qctt.cn/video/306288',
-        // 'http://www.qctt.cn/news/1065513',
-        // 'http://www.toutiao.com/a1707511721790464/',
-        // 'http://www.toutiao.com/a6994081780332495372',
-        // 'http://hj.pcauto.com.cn/article/908470',
-        // 'http://hj.pcauto.com.cn/article/908188',
-        // 'http://www.chexun.com/2021-08-12/113626139.html',
-        // 'https://www.360kuai.com/94f2c193405489f8f',
-        // 'https://www.iqiyi.com/v_1fwsaf6ira4.html',
-        // 'http://www.toutiao.com/a1707672883274759/',
-        // 'http://www.toutiao.com/a6994727135298473229/',
-        // 'http://aikahao.xcar.com.cn/item/910313.html',
-        // 'http://aikahao.xcar.com.cn/item/910054.html',
-        // 'http://aikahao.xcar.com.cn/item/909846.html',
-        // 'http://aikahao.xcar.com.cn/item/910147.html',
-        // 'http://aikahao.xcar.com.cn/item/910945.html',
-        // 'http://cheshihao.cheshi.com/news/557752.html',
-        // 'http://cheshihao.cheshi.com/news/558130.html',
-        // 'http://cheshihao.cheshi.com/news/557548.html',
-        // 'http://cheshihao.cheshi.com/video/558485.html',
-        // 'http://cheshihao.cheshi.com/news/557887.html',
-        // 'http://cheshihao.cheshi.com/news/558238.html',
-        // 'http://cheshihao.cheshi.com/news/557759.html'
+    // [
+    // 'http://www.youcheyihou.com/news/1208235',
+    // 'http://www.youcheyihou.com/news/1208407'
+    // 'http://www.12365auto.com/zjdy/20210813/152491.shtml'
+    // 'http://www.che-shijie.com/news/2108/21556_1.shtml'
+    // 'http://ishare.ifeng.com/c/s/v002LJbFVwfWtkOkhVl--uKT941f-_6EFrK476jIS3rcfZpiA__',
+    // 'http://v.ifeng.com/c/88eO5V7Aw03',
+    // 'http://v.ifeng.com/c/88fpdjRKXOF'
+    // 'http://video.baomihua.com/v/48695375'
+    // 'http://www.360kuai.com/9ae223b852906ad1d'
+    // 'http://v.qq.com/x/page/e3268oxiyqd.html',
+    // 'http://new.qq.com/omn/20210810/20210810A0DLQ400'
+    // 'http://auto.sina.com.cn/info/cx/2021-08-13/detail-ikqciyzm1187114.shtml',
+    // 'http://k.sina.cn/article_6569466249_18792198900101bm46.html'
+    // 'http://3g.k.sohu.com/t/n549568301',
+    // 'http://3g.k.sohu.com/t/n549602634'
+    // 'http://chejiahao.autohome.com.cn/info/9286866',
+    // 'http://chejiahao.autohome.com.cn/info/9288959'
+    // 'https://www.laosiji.com/thread_1511187/',
+    // 'https://www.laosiji.com/thread_1511227/'
+    // 'http://www.myzaker.com/article/610f02837f780beb4c000002'
+    // 'http://www.dripcar.com/zixun/172122.html'
+    // 'https://v.qq.com/x/page/e3268neaty4.html'
+    // 'http://www.youcheyihou.com/news/1208232',
+    // 'http://www.youcheyihou.com/news/1208326'
+    // 'http://www.yidianzixun.com/article/0WhsmCa4',
+    // 'http://www.sohu.com/a/483197234_121119176',
+    // 'http://www.sohu.com/a/483117242_121189651',
+    // 'http://www.auto-first.cn/news/story_104551.html',
+    // 'http://www.auto-first.cn/news/story_104608.html',
+    // 'http://www.qctt.cn/video/306288',
+    // 'http://www.qctt.cn/news/1065513',
+    // 'http://www.toutiao.com/a1707511721790464/',
+    // 'http://www.toutiao.com/a6994081780332495372',
+    // 'http://hj.pcauto.com.cn/article/908470',
+    // 'http://hj.pcauto.com.cn/article/908188',
+    // 'http://www.chexun.com/2021-08-12/113626139.html',
+    // 'https://www.360kuai.com/94f2c193405489f8f',
+    // 'https://www.iqiyi.com/v_1fwsaf6ira4.html',
+    // 'http://www.toutiao.com/a1707672883274759/',
+    // 'http://www.toutiao.com/a6994727135298473229/',
+    // 'http://aikahao.xcar.com.cn/item/910313.html',
+    // 'http://aikahao.xcar.com.cn/item/910054.html',
+    // 'http://aikahao.xcar.com.cn/item/909846.html',
+    // 'http://aikahao.xcar.com.cn/item/910147.html',
+    // 'http://aikahao.xcar.com.cn/item/910945.html',
+    // 'http://cheshihao.cheshi.com/news/557752.html',
+    // 'http://cheshihao.cheshi.com/news/558130.html',
+    // 'http://cheshihao.cheshi.com/news/557548.html',
+    // 'http://cheshihao.cheshi.com/video/558485.html',
+    // 'http://cheshihao.cheshi.com/news/557887.html',
+    // 'http://cheshihao.cheshi.com/news/558238.html',
+    // 'http://cheshihao.cheshi.com/news/557759.html'
     // ]
     let arrUrls = []
     for (let i = 0; i < arr.length; i++) {
@@ -230,14 +231,14 @@ async function run(urls, id) {
     let promiseArr = []
     for (let i = 0; i < sites.length; i++) {
         // console.log("sites[i]",sites[i])
-        promiseArr.push(openNewPage(sites[i], i))
+        promiseArr.push(openNewPage(sites[i], i, md5))
         // console.log('promiseArr.push' + i)
     }
     Promise.all(promiseArr).then((values) => {
         console.log('all complete', values)
-        fs.writeFile('./data/'+ id + '_data.json', JSON.stringify(values), function () {
-            console.log('保存成功')
-        })
+        // fs.writeFile('./data/'+ md5 + '_data.json', JSON.stringify(values), function () {
+        //     console.log('保存成功')
+        // })
     })
 }
 
@@ -372,7 +373,7 @@ function getData(browser, record, i) {
                         data.author = jquery('#u_info').children('dd').eq('0').children('h3').eq(0).children('a').eq(0).text()
                         break;
                     case 'sohu':
-                        data.read = jquery('.l.read-num').text()
+                        data.read = jquery('.l.read-num').text().replace('阅读(', '').replace(')','')
                         data.author = jquery('.name.l').text()
                         data.platform = '搜狐自媒体'
                         data.isVideo = false
@@ -488,7 +489,7 @@ function sleeep(ms) {
     return new Promise(resolve => setTimeout(resolve, ms))
 }
 
-async function openNewPage(site, index) {
+async function openNewPage(site, index, md5) {
     // console.log("site.type",site.type)
     return new Promise(async (resolve, reject) => {
 
@@ -515,7 +516,20 @@ async function openNewPage(site, index) {
             data.push(record)
             await sleeep(site.interval)
         }
-        console.log('第' + index + '个网站:' + site.type + '完成')
+        console.log('第' + index + '个网站:' + site.type + '完成' + md5)
+        if (!fs.existsSync('./data/' + md5 + '_data.json')) {
+            console.log('新建')
+            fs.writeFileSync('./data/' + md5 + '_data.json', JSON.stringify(data), function () {
+
+            })
+        } else {
+            console.log('添加')
+            fs.appendFileSync('./data/' + md5 + '_data.json', ','+JSON.stringify(data), function () {
+
+            })
+
+        }
+
         await browser.close();
         resolve(data)
     })
@@ -523,23 +537,24 @@ async function openNewPage(site, index) {
 }
 
 router.post('/', function (req, res, next) {
+    console.log('users')
     let urls = JSON.parse(req.body.urls);
     console.log(urls)
     // console.log(data)
     const md5 = crypto.createHash('md5');
     let dataMD5 = md5.update(req.body.urls).digest('hex');
-    console.log('dataMD5',dataMD5)
+    console.log('dataMD5', dataMD5)
     try {
         const data = fs.readFileSync('./md5.json', 'utf8').split(/[(\r\n)\r\n]+/)
         console.log(data)
-        let alreadyInSpam = data.some((item)=>{
-            console.log('item',item)
+        let alreadyInSpam = data.some((item) => {
+            console.log('item', item)
             return item == dataMD5
         })
         if (alreadyInSpam) {
             res.json({msg: '已经在抓取中或已经完成', code: 200, success: false, id: dataMD5})
-        }else{
-            fs.appendFileSync('./md5.json',  dataMD5+'\n')
+        } else {
+            fs.appendFileSync('./md5.json', dataMD5 + '\n')
             run(urls, dataMD5).then(() => {
 
             })
@@ -556,13 +571,13 @@ router.post('/', function (req, res, next) {
 router.get('/query', function (req, res, next) {
     let md5 = req.query.id.trim()
     try {
-        if (fs.existsSync('./data/'+ md5 + '_data.json')) {
-            const data = fs.readFileSync('./data/'+ md5 + '_data.json', 'utf8')
-            res.json({msg: '已完成', code: 200, success: true, id: md5,data: JSON.parse(data)})
-        }else{
+        if (fs.existsSync('./data/' + md5 + '_data.json')) {
+            const data = '['+fs.readFileSync('./data/' + md5 + '_data.json', 'utf8') + ']'
+            res.json({msg: '已完成', code: 200, success: true, id: md5, data: JSON.parse(data)})
+        } else {
             res.json({msg: '未完成， 请稍后', code: 200, success: false, id: md5})
         }
-    } catch(err) {
+    } catch (err) {
         console.error(err)
     }
 })
