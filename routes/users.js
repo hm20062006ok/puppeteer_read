@@ -2,9 +2,7 @@ var express = require('express');
 var router = express.Router();
 const puppeteer = require('puppeteer');
 const fs = require('fs')
-
-/* GET users listing. */
-
+const crypto = require('crypto');
 function getInterval(type) {
     let interval
     switch (type) {
@@ -40,10 +38,12 @@ function getTimeOutByType(type) {
     return timeout
 }
 
-async function run(urls) {
-    let arr = [
-        'http://www.youcheyihou.com/news/1208235',
-        'http://www.youcheyihou.com/news/1208407'
+async function run(urls, id) {
+    console.log(urls)
+    let arr = urls
+        // [
+        // 'http://www.youcheyihou.com/news/1208235',
+        // 'http://www.youcheyihou.com/news/1208407'
         // 'http://www.12365auto.com/zjdy/20210813/152491.shtml'
         // 'http://www.che-shijie.com/news/2108/21556_1.shtml'
         // 'http://ishare.ifeng.com/c/s/v002LJbFVwfWtkOkhVl--uKT941f-_6EFrK476jIS3rcfZpiA__',
@@ -94,7 +94,7 @@ async function run(urls) {
         // 'http://cheshihao.cheshi.com/news/557887.html',
         // 'http://cheshihao.cheshi.com/news/558238.html',
         // 'http://cheshihao.cheshi.com/news/557759.html'
-    ]
+    // ]
     let arrUrls = []
     for (let i = 0; i < arr.length; i++) {
         let type = '';
@@ -235,9 +235,9 @@ async function run(urls) {
     }
     Promise.all(promiseArr).then((values) => {
         console.log('all complete', values)
-        // fs.writeFile('./data.json', JSON.stringify(values), function () {
-        //     console.log('保存成功')
-        // })
+        fs.writeFile('./data/'+ id + '_data.json', JSON.stringify(values), function () {
+            console.log('保存成功')
+        })
     })
 }
 
@@ -493,7 +493,6 @@ async function openNewPage(site, index) {
     return new Promise(async (resolve, reject) => {
 
         let headless = true;
-        //TODO 其他类型
         let headlessSites = ['toutiao', 'qctt', 'qctt_video']
         if (headlessSites.includes(site.type)) {
             console.log('open with ui')
@@ -523,16 +522,49 @@ async function openNewPage(site, index) {
 
 }
 
-// 标题 平台 作者 浏览数 视频/文章  车型  品牌
+router.post('/', function (req, res, next) {
+    let urls = JSON.parse(req.body.urls);
+    console.log(urls)
+    // console.log(data)
+    const md5 = crypto.createHash('md5');
+    let dataMD5 = md5.update(req.body.urls).digest('hex');
+    console.log('dataMD5',dataMD5)
+    try {
+        const data = fs.readFileSync('./md5.json', 'utf8').split(/[(\r\n)\r\n]+/)
+        console.log(data)
+        let alreadyInSpam = data.some((item)=>{
+            console.log('item',item)
+            return item == dataMD5
+        })
+        if (alreadyInSpam) {
+            res.json({msg: '已经在抓取中或已经完成', code: 200, success: false, id: dataMD5})
+        }else{
+            fs.appendFileSync('./md5.json',  dataMD5+'\n')
+            run(urls, dataMD5).then(() => {
 
-router.get('/', function (req, res, next) {
-    // screenShot().then(() => {
-    //     res.send('respond with a resource');
-    //
-    // })
-    run().then(() => {
-        res.send('respond with a resource');
-    })
+            })
+            res.json({msg: '开始抓取', code: 200, success: true, id: dataMD5})
+        }
+        // console.log('alreadyInSpam', alreadyInSpam)
+    } catch (err) {
+        //TODO 当没有md5.json 文件时的错误处理
+        console.error(err)
+    }
 });
+
+
+router.get('/query', function (req, res, next) {
+    let md5 = req.query.id.trim()
+    try {
+        if (fs.existsSync('./data/'+ md5 + '_data.json')) {
+            const data = fs.readFileSync('./data/'+ md5 + '_data.json', 'utf8')
+            res.json({msg: '已完成', code: 200, success: true, id: md5,data: JSON.parse(data)})
+        }else{
+            res.json({msg: '未完成， 请稍后', code: 200, success: false, id: md5})
+        }
+    } catch(err) {
+        console.error(err)
+    }
+})
 
 module.exports = router;
