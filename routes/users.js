@@ -374,7 +374,14 @@ function getData(browser, record, i) {
                         break;
                     case 'sohu':
                         data.read = jquery('.l.read-num').text().replace('阅读(', '').replace(')','')
+                        if(!data.read){
+                            data.read = jquery('.read-num').text().replace('阅读 (', '').replace(')','')
+                        }
                         data.author = jquery('.name.l').text()
+
+                        if(!data.author){
+                            data.author = jquery('#user-info').children('h4').eq(0).text().trim()
+                        }
                         data.platform = '搜狐自媒体'
                         data.isVideo = false
                         let id = jquery('#sohuVideoBox').attr('id')
@@ -415,7 +422,7 @@ function getData(browser, record, i) {
                         break;
                     case 'chejiahao':
                         data.author = jquery('.articleTag').children('span').eq('0').text()
-                        data.read = jquery('.articleTag').children('span').eq('1').text()
+                        data.read = jquery('.articleTag').children('span').eq('1').text().replace('浏览','')
                         if (jquery('.video-container').length > 0) {
                             data.platform = '汽车之家车家号视频'
                             data.isVideo = true
