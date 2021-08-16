@@ -600,7 +600,7 @@ router.post('/', function (req, res, next) {
             run(urls, dataMD5).then(() => {
 
             })
-            res.json({msg: '开始抓取, 至少需要等待45秒', code: 200, success: true, id: dataMD5})
+            res.json({msg: '开始抓取...', code: 200, success: true, id: dataMD5})
         } else {
             const data = JSON.parse('[' + fs.readFileSync('./md5.json', 'utf8') + ']')
             console.log(data)
@@ -614,7 +614,7 @@ router.post('/', function (req, res, next) {
                 run(urls, dataMD5).then(() => {
 
                 })
-                res.json({msg: '开始抓取, 至少需要等待45秒', code: 200, success: true, id: dataMD5})
+                res.json({msg: '开始抓取...', code: 200, success: true, id: dataMD5})
             }
         }
     } catch (err) {
