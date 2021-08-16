@@ -30,14 +30,30 @@ function getTimeOutByType(type) {
     let timeout
     switch (type) {
         case 'iqiyi':
-            timeout = 1000 * 20
+            timeout = 1000 * 10
+            break;
+        case 'acfun':
+            timeout = 1000 * 5
+            break;
+        case 'aikahao_video':
+            timeout = 1000 * 5
+            break;
+        case 'cheshihao_video':
+            timeout = 1000 * 5
+            break;
+        case 'qctt_video':
+            timeout = 1000 * 5
+            break;
+        case 'v_qq':
+            timeout = 1000 * 5
             break;
         default:
-            timeout = 1000 * 15
+            timeout = 1000 * 5
             break;
     }
     return timeout
 }
+
 
 async function run(urls, md5) {
     console.log(urls)
@@ -193,6 +209,9 @@ async function run(urls, md5) {
         } else if (arr[i].indexOf('12365auto.com') > -1) {
             type = 'auto12365'
             platform = '车质网'
+        } else if (arr[i].indexOf('inews.qq.com') > -1) {
+            type = 'news_qq'
+            platform = '腾讯新闻客户端视频'
         }
         arrUrls.push({
             type,
@@ -249,7 +268,7 @@ function getData(browser, record, i) {
         const page = await browser.newPage();
         await page.evaluateOnNewDocument(() => {
             const newProto = navigator.__proto__;
-            // delete newProto.webdriver;
+            delete newProto.webdriver;
             navigator.__proto__ = newProto;
             window.chrome = {};
             window.chrome.app = {
@@ -286,15 +305,16 @@ function getData(browser, record, i) {
             );
         })
         // await page.goto(record.url, {waitUntil: 'networkidle0', timeout: 30 * 1000}).catch(() => {
-        await page.goto(record.url, {waitUntil: 'load', timeout: 30 * 1000}).catch(() => {
-        //     console.log('打开网站时发生错误', record.url)
-
-        })
-        // getSelector(record.type)
-        // await page.waitFor(getTimeOutByType(record.type))
-        await page.waitForSelector('#mod_cover_playnum').catch(() => {
+        await page.goto(record.url, {waitUntil: 'load', timeout: 10 * 1000}).catch(() => {
             console.log('打开网站时发生错误', record.url)
         })
+        console.log(Date.now())
+        await page.waitFor(getTimeOutByType(record.type))
+        console.log(Date.now())
+
+        // await page.waitForSelector(getSelectorByType(record.type)).catch(() => {
+        //     console.log('打开网站时发生错误', record.url)
+        // })
         let title = await page.title();
         await page.addScriptTag({path: './jquery.js'})
         let result = await page.evaluate((type) => {
@@ -316,7 +336,7 @@ function getData(browser, record, i) {
                         break;
                     case 'cheshihao_video':
                         data.read = jquery('.icon_browse').parent().text().replace(/[^\d.]/g, "")
-                        data.author = jquery('.name').text().trim()
+                        data.author = jquery('.author_txt').children('p').eq(0).children('a').eq(0).text().trim()
                         break;
                     case 'toutiao':
                         data.author = jquery('.user__name').text().trim()
@@ -378,13 +398,13 @@ function getData(browser, record, i) {
                         data.author = jquery('#u_info').children('dd').eq('0').children('h3').eq(0).children('a').eq(0).text()
                         break;
                     case 'sohu':
-                        data.read = jquery('.l.read-num').text().replace('阅读(', '').replace(')','')
-                        if(!data.read){
-                            data.read = jquery('.read-num').text().replace('阅读 (', '').replace(')','')
+                        data.read = jquery('.l.read-num').text().replace('阅读(', '').replace(')', '')
+                        if (!data.read) {
+                            data.read = jquery('.read-num').text().replace('阅读 (', '').replace(')', '')
                         }
                         data.author = jquery('.right-author-info').children('div').eq(0).children('a').eq(1).text()
 
-                        if(!data.author){
+                        if (!data.author) {
                             data.author = jquery('#user-info').children('h4').eq(0).text().trim()
                         }
                         data.platform = '搜狐自媒体'
@@ -409,7 +429,7 @@ function getData(browser, record, i) {
                     case 'v_qq':
                         data.read = jquery('#mod_cover_playnum').text()
                         data.author = jquery('.user_aside').children('span').eq('0').text()
-                        if(!data.author || data.author == 'undefined'){
+                        if (!data.author || data.author == 'undefined') {
                             data.author = ''
                         }
                         data.isVideo = true
@@ -430,7 +450,7 @@ function getData(browser, record, i) {
                         break;
                     case 'chejiahao':
                         data.author = jquery('.articleTag').children('span').eq('0').text()
-                        data.read = jquery('.articleTag').children('span').eq('1').text().replace('浏览','')
+                        data.read = jquery('.articleTag').children('span').eq('1').text().replace('浏览', '')
                         if (jquery('.video-container').length > 0) {
                             data.platform = '汽车之家车家号视频'
                             data.isVideo = true
@@ -474,6 +494,10 @@ function getData(browser, record, i) {
                     case 'auto12365':
                         data.read = jquery(".dy_user").text()
                         break;
+                    case 'news_qq':
+                        data.author = jquery("._5utH1zATwzI7m6_Bho33a").text()
+                        data.isVideo = true
+                        break;
                     default:
                         break;
                 }
@@ -505,7 +529,7 @@ function sleeep(ms) {
 }
 
 async function openNewPage(site, index, md5) {
-    console.log("site.type",site.type)
+    console.log("site.type", site.type)
     return new Promise(async (resolve, reject) => {
 
         let headless = true;
@@ -534,15 +558,15 @@ async function openNewPage(site, index, md5) {
                 fs.writeFileSync('./data/' + md5 + '_data.json', JSON.stringify(record))
             } else {
                 console.log('添加')
-                fs.appendFileSync('./data/' + md5 + '_data.json', ','+JSON.stringify(record))
+                fs.appendFileSync('./data/' + md5 + '_data.json', ',' + JSON.stringify(record))
             }
             console.log(record)
             let fileString = fs.readFileSync('./md5.json', 'utf8');
-            let regExp = new RegExp('(?<='+md5+'","completed":).+(?=,)');
+            let regExp = new RegExp('(?<=' + md5 + '","completed":).+(?=,)');
             let count = Number.parseInt(fileString.match(regExp)[0]) + 1
-            let replacedString = fileString.replace(regExp, count+'')
-            console.log('count',replacedString)
-            fs.writeFileSync('./md5.json',replacedString)
+            let replacedString = fileString.replace(regExp, count + '')
+            console.log('count', replacedString)
+            fs.writeFileSync('./md5.json', replacedString)
 
             // data.push(record)
             await sleeep(site.interval)
@@ -554,6 +578,7 @@ async function openNewPage(site, index, md5) {
     })
 
 }
+
 router.post('/', function (req, res, next) {
 
     process.setMaxListeners(0)
@@ -576,8 +601,8 @@ router.post('/', function (req, res, next) {
 
             })
             res.json({msg: '开始抓取, 至少需要等待45秒', code: 200, success: true, id: dataMD5})
-        }else{
-            const data = JSON.parse('['+fs.readFileSync('./md5.json', 'utf8')+']')
+        } else {
+            const data = JSON.parse('[' + fs.readFileSync('./md5.json', 'utf8') + ']')
             console.log(data)
             let alreadyInSpam = data.some((item) => {
                 return item.id === dataMD5
@@ -585,7 +610,7 @@ router.post('/', function (req, res, next) {
             if (alreadyInSpam) {
                 res.json({msg: '相同数据正在在抓取中', code: 200, success: false, id: dataMD5})
             } else {
-                fs.appendFileSync('./md5.json', ','+JSON.stringify(requestData))
+                fs.appendFileSync('./md5.json', ',' + JSON.stringify(requestData))
                 run(urls, dataMD5).then(() => {
 
                 })
@@ -603,28 +628,44 @@ router.get('/query', function (req, res, next) {
     let md5 = req.query.id.trim()
     try {
 
-        const data = JSON.parse('['+fs.readFileSync('./md5.json', 'utf8')+']')
+        const data = JSON.parse('[' + fs.readFileSync('./md5.json', 'utf8') + ']')
         let currentRequest = {}
         let alreadyInSpam = data.some((item) => {
-            if(item.id === md5){
+            if (item.id === md5) {
                 currentRequest = item
             }
             return item.id === md5
         })
-        if(alreadyInSpam){
+        if (alreadyInSpam) {
             if (fs.existsSync('./data/' + md5 + '_data.json')) {
-                const data = '['+fs.readFileSync('./data/' + md5 + '_data.json', 'utf8') + ']'
+                const data = '[' + fs.readFileSync('./data/' + md5 + '_data.json', 'utf8') + ']'
                 if (currentRequest.completed === currentRequest.length) {
-                    res.json({msg: '已完成', code: 200, success: true, id: md5, completed: currentRequest.completed, total: currentRequest.length, data: JSON.parse(data)})
+                    res.json({
+                        msg: '已完成',
+                        code: 200,
+                        success: true,
+                        id: md5,
+                        completed: currentRequest.completed,
+                        total: currentRequest.length,
+                        data: JSON.parse(data)
+                    })
                     return
                 }
-                res.json({msg: '已完成部分', code: 201, success: false, id: md5, completed: currentRequest.completed, total: currentRequest.length, data: JSON.parse(data)})
+                res.json({
+                    msg: '已完成部分',
+                    code: 201,
+                    success: false,
+                    id: md5,
+                    completed: currentRequest.completed,
+                    total: currentRequest.length,
+                    data: JSON.parse(data)
+                })
                 return
             } else {
                 res.json({msg: '无数据， 请稍后', code: 400, success: false, id: md5})
                 return
             }
-        }else{
+        } else {
             res.json({msg: '无数据， 请稍后', code: 400, success: false, id: md5})
             return
         }
