@@ -17,7 +17,7 @@ function getInterval(type) {
             interval = 3000
             break;
         case 'sohu':
-            interval = 1000 * 5
+            interval = 1000 * 3
             break;
         default:
             interval = 3000
@@ -33,7 +33,7 @@ function getTimeOutByType(type) {
             timeout = 1000 * 20
             break;
         default:
-            timeout = 1000 * 10
+            timeout = 1000 * 15
             break;
     }
     return timeout
@@ -285,11 +285,16 @@ function getData(browser, record, i) {
                     originalQuery(parameters)
             );
         })
-        await page.goto(record.url, {waitUntil: 'networkidle0', timeout: 30 * 1000}).catch(() => {
-            console.log('打开网站时发生错误', record.url)
+        // await page.goto(record.url, {waitUntil: 'networkidle0', timeout: 30 * 1000}).catch(() => {
+        await page.goto(record.url, {waitUntil: 'load', timeout: 30 * 1000}).catch(() => {
+        //     console.log('打开网站时发生错误', record.url)
+
         })
         // getSelector(record.type)
-        await page.waitFor(getTimeOutByType(record.type))
+        // await page.waitFor(getTimeOutByType(record.type))
+        await page.waitForSelector('#mod_cover_playnum').catch(() => {
+            console.log('打开网站时发生错误', record.url)
+        })
         let title = await page.title();
         await page.addScriptTag({path: './jquery.js'})
         let result = await page.evaluate((type) => {
@@ -404,7 +409,7 @@ function getData(browser, record, i) {
                     case 'v_qq':
                         data.read = jquery('#mod_cover_playnum').text()
                         data.author = jquery('.user_aside').children('span').eq('0').text()
-                        if(!data.author){
+                        if(!data.author || data.author == 'undefined'){
                             data.author = ''
                         }
                         data.isVideo = true
