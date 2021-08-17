@@ -217,7 +217,7 @@ async function run(urls, md5) {
             type,
             platform,
             url: arr[i],
-            id: i
+            id: i + 1
         })
     }
 
