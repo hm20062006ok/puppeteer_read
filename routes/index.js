@@ -69,12 +69,13 @@ function getData(page, keyword, md5, i) {
         for (let j = 0; j < 10; j++) {
             await page.goto('https://weixin.sogou.com/weixin?query=' + thatKeywords + '&type=2&page=' + (j + 1) + '&ie=utf8', {
                 waitUntil: 'load',
-                timeout: 5 * 1000
+                timeout: 15 * 1000
             }).catch(() => {
                 console.log('打开网站时发生错误')
             })
             await page.addScriptTag({path: './jquery.js'})
             await page.waitFor(3000)
+            //result 页面爬取回来的数据
             let result = await page.evaluate(() => {
                 let miaoQuery = jQuery.noConflict();
                 let news = miaoQuery(".news-list").children('li').filter(function () {
@@ -105,6 +106,7 @@ function getData(page, keyword, md5, i) {
                 })
                 await page.waitFor(2000)
                 result[k].url = page.url()
+                result[k].keyword = thatKeywords
                 // console.log("result[i]",result[i])
             }
             //一页的数据
@@ -112,7 +114,18 @@ function getData(page, keyword, md5, i) {
             console.log('result', result)
         }
         thatPage.close()
-        //TODO 写入文件
+        if (!fs.existsSync('./weixin_data/' + thatMd5 + '_data.json')) {
+            // console.log('新建')
+            fs.writeFileSync('./weixin_data/' + thatMd5 + '_data.json', JSON.stringify(currentKeywordData))
+        } else {
+            console.log('添加')
+            fs.appendFileSync('./weixin_data/' + thatMd5 + '_data.json', ',' + JSON.stringify(currentKeywordData))
+        }
+        let fileString = fs.readFileSync('./wei_xin_md5.json', 'utf8');
+        let regExp = new RegExp('(?<=' + thatMd5 + '","completed":).+(?=,)');
+        let count = Number.parseInt(fileString.match(regExp)[0]) + 1
+        let replacedString = fileString.replace(regExp, count + '')
+        fs.writeFileSync('./wei_xin_md5.json', replacedString)
         resolve(currentKeywordData)
     })
 }
@@ -196,5 +209,57 @@ router.post('/', function (req, res, next) {
         console.error(err)
     }
 });
+
+router.get('/query', function (req, res, next) {
+    let md5 = req.query.id.trim()
+    try {
+        const data = JSON.parse('[' + fs.readFileSync('./wei_xin_md5.json', 'utf8') + ']')
+        let currentRequest = {}
+        let alreadyInSpam = data.some((item) => {
+            if (item.id === md5) {
+                currentRequest = item
+            }
+            return item.id === md5
+        })
+        if (alreadyInSpam) {
+            if (fs.existsSync('./weixin_data/' + md5 + '_data.json')) {
+                const data = '[' + fs.readFileSync('./weixin_data/' + md5 + '_data.json', 'utf8') + ']'
+                if (currentRequest.completed === currentRequest.length) {
+                    res.json({
+                        msg: '已完成',
+                        code: 200,
+                        success: true,
+                        id: md5,
+                        completed: currentRequest.completed,
+                        total: currentRequest.length,
+                        data: JSON.parse(data)
+                    })
+                    return
+                }
+                res.json({
+                    msg: '已完成部分',
+                    code: 201,
+                    success: false,
+                    id: md5,
+                    completed: currentRequest.completed,
+                    total: currentRequest.length,
+                    data: JSON.parse(data)
+                })
+                return
+            } else {
+                res.json({msg: '无数据， 请稍后', code: 400, success: false, id: md5})
+                return
+            }
+        } else {
+            res.json({msg: '无数据， 请稍后', code: 400, success: false, id: md5})
+            return
+        }
+
+
+    } catch (err) {
+        console.error(err)
+    }
+})
+
 
 module.exports = router;
