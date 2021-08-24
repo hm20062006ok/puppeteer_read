@@ -5,15 +5,6 @@ const crypto = require('crypto');
 const fs = require('fs')
 
 
-/**
- *  1. page.goto (https://weixin.sogou.com/weixin?query=GL8&type=2&page=2&ie=utf8)
- *  2. tenResult = selector.('txt-box')
- *  3. tenResult for i   item..children('s2').text() .include('小时前') || include('天前'）
- *  4. if true,  item..children('s2').text(), item.children('h3').children('a').href();. push to array
- *  5. array . fori  {page.goto(array.item.url) , page.title ,  page.url}
- *  6. save to md5.json
- */
-
 function sleeep(ms) {
     return new Promise(resolve => setTimeout(resolve, ms))
 }
@@ -90,7 +81,8 @@ function getData(page, keyword, md5, i) {
                     console.log('title:', title)
                     let url = 'https://weixin.sogou.com' + miaoQuery(this).children('.txt-box').eq(0).children('h3').eq(0).children('a').eq(0).attr('href')
                     console.log('url:', url)
-                    let date = miaoQuery(this).find(".s2").text()
+                    let dateText = miaoQuery(this).find(".s2").text()
+                    let date  = new Date(dateText.match(/'.*'/)[0].replace(/'/g, '') * 1000).toLocaleDateString('zh-CN')
                     let summary = miaoQuery(this).children('.txt-box').eq(0).children('.txt-info').eq(0).text()
                     return {title, url, date, summary}
                 }).get();
