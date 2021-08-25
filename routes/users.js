@@ -407,6 +407,11 @@ function getData(browser, record, i) {
                         if (!data.author) {
                             data.author = jquery('#user-info').children('h4').eq(0).text().trim()
                         }
+
+                        if (!data.author) {
+                            data.author = jquery('.author-box').children('.name').eq(0).text().trim()
+                        }
+
                         data.platform = '搜狐自媒体'
                         data.isVideo = false
                         let id = jquery('#sohuVideoBox').attr('id')
@@ -414,6 +419,11 @@ function getData(browser, record, i) {
                             data.platform = '搜狐自媒体视频'
                             data.isVideo = true
                         }
+                        if (jquery('#mainVideoContent').attr('id')) {
+                            data.platform = '搜狐自媒体视频'
+                            data.isVideo = true
+                        }
+
                         break;
                     case 'yidianzixun':
                         // data.read = jquery('.l.read-num').text()
